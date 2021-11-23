@@ -11,12 +11,31 @@ export const SegmentAnalytics = Analytics({
   ]
 })
 
+export const handleScreenChange = (url) => {
+  const {
+    context: { sessionId, app },
+    user: { userId, anonymousId, version }
+  } = SegmentAnalytics.getState()
+  const previous = SegmentAnalytics.getState().page?.last?.properties?.to
+
+  SegmentAnalytics.page({
+    version,
+    build: '0.1.0',
+    from: previous || url,
+    to: url,
+    user_id: userId || anonymousId,
+    session_id: sessionId,
+    project: app
+  })
+}
+
 const Segment = () => {
   const [appboy, setAppboy] = useState(null)
+
   const initializePushSubscription = () => {
     appboy.subscribeToInAppMessage((inAppMessage) => {
       // eslint-disable-next-line no-console
-      console.log(inAppMessage)
+      console.log('inAppMessage:', inAppMessage)
       let shouldDisplay = true
 
       if (inAppMessage instanceof appboy.InAppMessage) {
@@ -47,7 +66,7 @@ const Segment = () => {
     import('@braze/web-sdk').then(sdk => {
       if (sdk) {
         sdk.initialize(process.env.NEXT_PUBLIC_BRAZE_KEY, {
-          baseUrl: 'https://sdk.iad-05.braze.com',
+          baseUrl: 'sdk.iad-05.braze.com',
           enableLogging: process.env.NODE_ENV !== 'production',
           manageServiceWorkerExternally: true,
           requireExplicitInAppMessageDismissal: true
